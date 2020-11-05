@@ -1,110 +1,103 @@
+# Android Dockerfile
+
 FROM ubuntu:18.04
 
-ENV ANDROID_HOME="/opt/android-sdk" \
-    ANDROID_NDK="/opt/android-ndk" \
-    JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/"
+MAINTAINER Mobile Builds Eng "deguzman.maru@gmail.com"
 
-ENV ANDROID_SDK_TOOLS_VERSION="4333796"
+# Sets language to UTF8 : this works in pretty much all cases
+ENV LANG en_US.UTF-8
+RUN locale-gen $LANG
 
-ENV ANDROID_NDK_VERSION="r21d"
+ENV DOCKER_ANDROID_LANG en_US
+ENV DOCKER_ANDROID_DISPLAY_NAME mobileci-docker
 
-# Set locale
-ENV LANG="en_US.UTF-8" \
-    LANGUAGE="en_US.UTF-8" \
-    LC_ALL="en_US.UTF-8"
+# Never ask for confirmations
+ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get clean && \
-    apt-get update -qq && \
-    apt-get install -qq -y apt-utils locales && \
-    locale-gen $LANG
-
-ENV DEBIAN_FRONTEND="noninteractive" \
-    TERM=dumb \
-    DEBIAN_FRONTEND=noninteractive
-
-# Variables must be references after they are created
-ENV ANDROID_SDK_HOME="$ANDROID_HOME"
-ENV ANDROID_NDK_HOME="$ANDROID_NDK/android-ndk-$ANDROID_NDK_VERSION"
-
-ENV PATH="$JAVA_HOME/bin:$PATH:$ANDROID_SDK_HOME/emulator:$ANDROID_SDK_HOME/tools/bin:$ANDROID_SDK_HOME/tools:$ANDROID_SDK_HOME/platform-tools:$ANDROID_NDK"
-
-WORKDIR /tmp
+# Update apt-get
+RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update
+RUN apt-get dist-upgrade -y
 
 # Installing packages
-RUN apt-get update -qq > /dev/null && \
-    apt-get install -qq locales > /dev/null && \
-    locale-gen "$LANG" > /dev/null && \
-    apt-get install -qq --no-install-recommends \
-        autoconf \
-        build-essential \
-        curl \
-        file \
-        git \
-        gpg-agent \
-        less \
-        lib32stdc++6 \
-        lib32z1 \
-        lib32z1-dev \
-        lib32ncurses5 \
-        libc6-dev \
-        libgmp-dev \
-        libmpc-dev \
-        libmpfr-dev \
-        libxslt-dev \
-        libxml2-dev \
-        m4 \
-        ncurses-dev \
-        ocaml \
-        openjdk-8-jdk \
-        openjdk-11-jdk \
-        openssh-client \
-        pkg-config \
-        ruby-full \
-        software-properties-common \
-        tzdata \
-        unzip \
-        vim-tiny \
-        wget \
-        zip \
-        zlib1g-dev > /dev/null && \
-    apt-get clean > /dev/null && \
-    rm -rf /tmp/* /var/tmp/*
+RUN apt-get install -y \
+  autoconf \
+  build-essential \
+  bzip2 \
+  curl \
+  gcc \
+  git \
+  groff \
+  lib32stdc++6 \
+  lib32z1 \
+  lib32z1-dev \
+  lib32ncurses5 \
+  lib32bz2-1.0 \
+  libc6-dev \
+  libgmp-dev \
+  libmpc-dev \
+  libmpfr-dev \
+  libxslt-dev \
+  libxml2-dev \
+  m4 \
+  make \
+  ncurses-dev \
+  ocaml \
+  openssh-client \
+  pkg-config \
+  python-software-properties \
+  rsync \
+  software-properties-common \
+  unzip \
+  wget \
+  zip \
+  zlib1g-dev \
+  --no-install-recommends
+
+# Install Java
+RUN apt-add-repository ppa:openjdk-r/ppa
+RUN apt-get update
+RUN apt-get -y install openjdk-8-jdk
+
+# Clean Up Apt-get
+RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get clean
 
 # Install Android SDK
-RUN echo "sdk tools ${ANDROID_SDK_TOOLS_VERSION}" && \
-    wget --quiet --output-document=sdk-tools.zip \
-        "https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS_VERSION}.zip" && \
-    mkdir --parents "$ANDROID_HOME" && \
-    unzip -q sdk-tools.zip -d "$ANDROID_HOME" && \
-    rm --force sdk-tools.zip
+RUN wget https://dl.google.com/android/android-sdk_r24.4.1-linux.tgz
+RUN tar -xvzf android-sdk_r24.4.1-linux.tgz
+RUN mv android-sdk-linux /usr/local/android-sdk
+RUN rm android-sdk_r24.4.1-linux.tgz
 
-RUN echo "ndk ${ANDROID_NDK_VERSION}" && \
-    wget --quiet --output-document=android-ndk.zip \
-    "http://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-linux-x86_64.zip" && \
-    mkdir --parents "$ANDROID_NDK_HOME" && \
-    unzip -q android-ndk.zip -d "$ANDROID_NDK" && \
-    rm --force android-ndk.zip
+ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2
 
-# Install SDKs
-# Please keep these in descending order!
-# The `yes` is for accepting all non-standard tool licenses.
-RUN mkdir --parents "$HOME/.android/" && \
-    echo '### User Sources for Android SDK Manager' > \
-        "$HOME/.android/repositories.cfg" && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager --licenses > /dev/null
+# Install Android tools
+RUN echo y | /usr/local/android-sdk/tools/android update sdk --filter "${ANDROID_COMPONENTS}" --no-ui -a
 
-RUN echo "platforms" && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
-        "platforms;android-30" \
-        "platforms;android-29" > /dev/null
+# Install Android NDK
+RUN wget http://dl.google.com/android/repository/android-ndk-r12-linux-x86_64.zip
+RUN unzip android-ndk-r12-linux-x86_64.zip
+RUN mv android-ndk-r12 /usr/local/android-ndk
+RUN rm android-ndk-r12-linux-x86_64.zip
 
-RUN echo "platform tools" && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
-        "platform-tools" > /dev/null
+# Environment variables
+ENV ANDROID_HOME /usr/local/android-sdk
+ENV ANDROID_SDK_HOME $ANDROID_HOME
+ENV ANDROID_NDK_HOME /usr/local/android-ndk
+ENV JENKINS_HOME $HOME
+ENV PATH ${INFER_HOME}/bin:${PATH}
+ENV PATH $PATH:$ANDROID_SDK_HOME/tools
+ENV PATH $PATH:$ANDROID_SDK_HOME/platform-tools
+ENV PATH $PATH:$ANDROID_SDK_HOME/build-tools/30.0.2
+ENV PATH $PATH:$ANDROID_NDK_HOME
 
-RUN echo "build tools 30" && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
-        "build-tools;30.0.2" > /dev/null
+# Export JAVA_HOME variable
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+
+# Support Gradle
+ENV TERM dumb
+ENV JAVA_OPTS "-Xms4096m -Xmx4096m"
+ENV GRADLE_OPTS "-XX:+UseG1GC -XX:MaxGCPauseMillis=1000"
 
 RUN echo "emulator" && \
     yes | "$ANDROID_HOME"/tools/bin/sdkmanager "emulator" > /dev/null
@@ -114,24 +107,29 @@ RUN echo "kotlin" && \
     bash -c "bash ./sdk.install.sh > /dev/null && source ~/.sdkman/bin/sdkman-init.sh && sdk install kotlin" && \
     rm -f sdk.install.sh
 
-# Copy sdk license agreement files.
-RUN mkdir -p $ANDROID_HOME/licenses
-COPY sdk/licenses/* $ANDROID_HOME/licenses/
+# Cleaning
+RUN apt-get clean
 
-# Create some jenkins required directory to allow this image run with Jenkins
-RUN mkdir -p /var/lib/jenkins/workspace && \
-    mkdir -p /home/jenkins && \
-    chmod 777 /home/jenkins && \
-    chmod 777 /var/lib/jenkins/workspace && \
-    chmod 777 $ANDROID_HOME/.android
+# Add build user account, values are set to default below
+ENV RUN_USER mobileci
+ENV RUN_UID 5089
 
-ENV BUILD_DATE=${BUILD_DATE} \
-    SOURCE_BRANCH=${SOURCE_BRANCH} \
-    SOURCE_COMMIT=${SOURCE_COMMIT} \
-    DOCKER_TAG=${DOCKER_TAG}
+RUN id $RUN_USER || adduser --uid "$RUN_UID" \
+    --gecos 'Build User' \
+    --shell '/bin/sh' \
+    --disabled-login \
+    --disabled-password "$RUN_USER"
 
-# labels, see http://label-schema.org/
-LABEL maintainer="Jan Maru De Guzman"
-LABEL org.label-schema.schema-version="1.0"
-LABEL org.label-schema.version="${DOCKER_TAG}"
-LABEL org.label-schema.build-date="${BUILD_DATE}"
+# Fix permissions
+RUN chown -R $RUN_USER:$RUN_USER $ANDROID_HOME $ANDROID_SDK_HOME $ANDROID_NDK_HOME
+RUN chmod -R a+rx $ANDROID_HOME $ANDROID_SDK_HOME $ANDROID_NDK_HOME
+
+# Creating project directories prepared for build when running
+# `docker run`
+ENV PROJECT /project
+RUN mkdir $PROJECT
+RUN chown -R $RUN_USER:$RUN_USER $PROJECT
+WORKDIR $PROJECT
+
+USER $RUN_USER
+RUN echo "sdk.dir=$ANDROID_HOME" > local.properties
