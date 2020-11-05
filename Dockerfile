@@ -72,6 +72,7 @@ RUN rm commandlinetools-linux-6858069_latest.zip
 ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2,build-tools-30.0.2
 
 # Install Android tools
+RUN /usr/local/android-sdk/bin/sdkmanager --sdk_root=../
 RUN echo y | /usr/local/android-sdk/bin/sdkmanager "${ANDROID_COMPONENTS}"
 
 # Environment variables
