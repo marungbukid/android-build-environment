@@ -4,6 +4,8 @@ FROM ubuntu:18.04
 
 MAINTAINER Mobile Builds Eng "deguzman.maru@gmail.com"
 
+ENV ANDROID_SDK_TOOLS_VERSION="4333796"
+
 # Sets language to UTF8 : this works in pretty much all cases
 ENV LANG en_US.UTF-8
 RUN locale-gen $LANG
@@ -64,10 +66,10 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN apt-get clean
 
 # Install Android SDK
-RUN wget https://dl.google.com/android/android-sdk_r24.4.1-linux.tgz
-RUN tar -xvzf android-sdk_r24.4.1-linux.tgz
-RUN mv android-sdk-linux /usr/local/android-sdk
-RUN rm android-sdk_r24.4.1-linux.tgz
+RUN wget --output-document=android-sdk-tools.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS_VERSION}.zip
+RUN unzip android-sdk-tools.zip
+RUN mv android-sdk-tools.zip /usr/local/android-sdk
+RUN rm android-sdk-tools.zip
 
 ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2
 
@@ -75,10 +77,10 @@ ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2
 RUN echo y | /usr/local/android-sdk/tools/android update sdk --filter "${ANDROID_COMPONENTS}" --no-ui -a
 
 # Install Android NDK
-RUN wget http://dl.google.com/android/repository/android-ndk-r12-linux-x86_64.zip
-RUN unzip android-ndk-r12-linux-x86_64.zip
-RUN mv android-ndk-r12 /usr/local/android-ndk
-RUN rm android-ndk-r12-linux-x86_64.zip
+RUN wget https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip
+RUN unzip android-ndk-r21d-linux-x86_64.zip
+RUN mv android-ndk-r21d /usr/local/android-ndk
+RUN rm android-ndk-r21d-linux-x86_64.zip
 
 # Environment variables
 ENV ANDROID_HOME /usr/local/android-sdk
