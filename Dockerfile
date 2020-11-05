@@ -2,7 +2,6 @@ FROM ubuntu:18.04
 
 ENV ANDROID_HOME="/opt/android-sdk" \
     ANDROID_NDK="/opt/android-ndk" \
-    FLUTTER_HOME="/opt/flutter" \
     JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64/"
 
 ENV ANDROID_SDK_TOOLS_VERSION="4333796"
@@ -97,17 +96,13 @@ RUN mkdir --parents "$HOME/.android/" && \
 RUN echo "platforms" && \
     yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
         "platforms;android-30" \
-        "platforms;android-29" \
-        "platforms;android-28" \
-        "platforms;android-27" \
-        "platforms;android-26" \
-        "platforms;android-25" > /dev/null
+        "platforms;android-29" > /dev/null
 
 RUN echo "platform tools" && \
     yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
         "platform-tools" > /dev/null
 
-RUN echo "build tools 25-30" && \
+RUN echo "build tools 30" && \
     yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
         "build-tools;30.0.2" > /dev/null
 
