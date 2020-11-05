@@ -8,7 +8,10 @@ ENV ANDROID_SDK_TOOLS_VERSION="4333796"
 
 # Sets language to UTF8 : this works in pretty much all cases
 ENV LANG en_US.UTF-8
-RUN locale-gen $LANG
+RUN apt-get clean && \
+    apt-get update -qq && \
+    apt-get install -qq -y apt-utils locales && \
+    locale-gen locale-gen $LANG
 
 ENV DOCKER_ANDROID_LANG en_US
 ENV DOCKER_ANDROID_DISPLAY_NAME mobileci-docker
