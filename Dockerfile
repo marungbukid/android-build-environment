@@ -66,13 +66,13 @@ RUN apt-get clean
 # Install Android SDK
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip
 RUN unzip commandlinetools-linux-6858069_latest.zip -d android-sdk-linux
-RUN mv android-sdk-linux /usr/local/android-sdk
+RUN mv android-sdk-linux/cmdline-tools /usr/local/android-sdk
 RUN rm commandlinetools-linux-6858069_latest.zip
 
 ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2,build-tools-30.0.2
 
 # Install Android tools
-RUN echo y | /usr/local/android-sdk/tools/android update sdk --filter "${ANDROID_COMPONENTS}" --no-ui -a
+RUN echo y | /usr/local/android-sdk/bin/sdkmanager "${ANDROID_COMPONENTS}"
 
 # Environment variables
 ENV ANDROID_HOME /usr/local/android-sdk
