@@ -65,7 +65,7 @@ RUN apt-get clean
 
 # Install Android SDK
 RUN wget https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip
-RUN tar -xvzf commandlinetools-linux-6858069_latest.zip
+RUN unzip commandlinetools-linux-6858069_latest.zip -d android-sdk-linux
 RUN mv android-sdk-linux /usr/local/android-sdk
 RUN rm commandlinetools-linux-6858069_latest.zip
 
