@@ -7,11 +7,14 @@ MAINTAINER Mobile Builds Eng "deguzman.maru@gmail.com"
 ENV ANDROID_SDK_TOOLS_VERSION="4333796"
 
 # Sets language to UTF8 : this works in pretty much all cases
-ENV LANG en_US.UTF-8
-RUN apt-get clean && \
-    apt-get update -qq && \
-    apt-get install -qq -y apt-utils locales && \
-    locale-gen locale-gen $LANG
+ENV LANG en_US.UTF-8 
+ENV LANGUAGE en_US.UTF-8 
+ENV LC_ALL en_US.UTF-8
+
+RUN apt-get clean
+RUN apt-get update
+RUN apt-get install -qq -y apt-utils locales
+RUN locale-gen $LANG
 
 ENV DOCKER_ANDROID_LANG en_US
 ENV DOCKER_ANDROID_DISPLAY_NAME mobileci-docker
@@ -37,7 +40,6 @@ RUN apt-get install -y \
   lib32z1 \
   lib32z1-dev \
   lib32ncurses5 \
-  lib32bz2-1.0 \
   libc6-dev \
   libgmp-dev \
   libmpc-dev \
@@ -50,7 +52,6 @@ RUN apt-get install -y \
   ocaml \
   openssh-client \
   pkg-config \
-  python-software-properties \
   rsync \
   software-properties-common \
   unzip \
@@ -70,9 +71,10 @@ RUN apt-get clean
 
 # Install Android SDK
 RUN wget --output-document=android-sdk-tools.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS_VERSION}.zip
-RUN unzip android-sdk-tools.zip
-RUN mv android-sdk-tools.zip /usr/local/android-sdk
+RUN unzip -d android-sdk-tools android-sdk-tools.zip
+RUN mv android-sdk-tools /usr/local/android-sdk
 RUN rm android-sdk-tools.zip
+
 
 ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2
 
@@ -81,7 +83,7 @@ RUN echo y | /usr/local/android-sdk/tools/android update sdk --filter "${ANDROID
 
 # Install Android NDK
 RUN wget https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip
-RUN unzip android-ndk-r21d-linux-x86_64.zip
+RUN unzip -d android-ndk-r21d android-ndk-r21d-linux-x86_64.zip
 RUN mv android-ndk-r21d /usr/local/android-ndk
 RUN rm android-ndk-r21d-linux-x86_64.zip
 
@@ -104,11 +106,29 @@ ENV TERM dumb
 ENV JAVA_OPTS "-Xms4096m -Xmx4096m"
 ENV GRADLE_OPTS "-XX:+UseG1GC -XX:MaxGCPauseMillis=1000"
 
-RUN echo "emulator" && \
-    yes | "$ANDROID_HOME"/tools/bin/sdkmanager "emulator" > /dev/null
+RUN mkdir --parents "$HOME/.android/"
+RUN touch "$HOME/.android/repositories.cfg"
+RUN  echo '### User Sources for Android SDK Manager' > \
+        "$HOME/.android/repositories.cfg" && \
+    yes | "$ANDROID_HOME"/tools/bin/sdkmanager --licenses > /dev/null
 
-RUN echo "kotlin" && \
-    wget --quiet -O sdk.install.sh "https://get.sdkman.io" && \
+RUN echo "platforms" && \
+    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
+        "platforms;android-30" > /dev/null
+
+RUN echo "platform tools" && \
+    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
+        "platform-tools" > /dev/null
+
+RUN echo "build tools" && \
+    yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
+        "build-tools;30.0.0" \
+        "build-tools;29.0.3" > /dev/null
+
+
+RUN yes | "$ANDROID_HOME"/tools/bin/sdkmanager "emulator" > /dev/null
+
+RUN wget --quiet -O sdk.install.sh "https://get.sdkman.io" && \
     bash -c "bash ./sdk.install.sh > /dev/null && source ~/.sdkman/bin/sdkman-init.sh && sdk install kotlin" && \
     rm -f sdk.install.sh
 
