@@ -109,7 +109,7 @@ RUN echo "platform tools" && \
 
 RUN echo "build tools 25-30" && \
     yes | "$ANDROID_HOME"/tools/bin/sdkmanager \
-        "build-tools;30.0.5" > /dev/null
+        "build-tools;30.0.2" > /dev/null
 
 RUN echo "emulator" && \
     yes | "$ANDROID_HOME"/tools/bin/sdkmanager "emulator" > /dev/null
