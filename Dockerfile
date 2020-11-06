@@ -81,22 +81,14 @@ ENV ANDROID_COMPONENTS platform-tools,android-30,build-tools-30.0.2
 # Install Android tools
 RUN echo y | /usr/local/android-sdk/tools/android update sdk --filter "${ANDROID_COMPONENTS}" --no-ui -a
 
-# Install Android NDK
-RUN wget https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip
-RUN unzip -d android-ndk-r21d android-ndk-r21d-linux-x86_64.zip
-RUN mv android-ndk-r21d /usr/local/android-ndk
-RUN rm android-ndk-r21d-linux-x86_64.zip
-
 # Environment variables
 ENV ANDROID_HOME /usr/local/android-sdk
 ENV ANDROID_SDK_HOME $ANDROID_HOME
-ENV ANDROID_NDK_HOME /usr/local/android-ndk
 ENV JENKINS_HOME $HOME
 ENV PATH ${INFER_HOME}/bin:${PATH}
 ENV PATH $PATH:$ANDROID_SDK_HOME/tools
 ENV PATH $PATH:$ANDROID_SDK_HOME/platform-tools
 ENV PATH $PATH:$ANDROID_SDK_HOME/build-tools/30.0.2
-ENV PATH $PATH:$ANDROID_NDK_HOME
 
 # Export JAVA_HOME variable
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
@@ -146,8 +138,8 @@ RUN id $RUN_USER || adduser --uid "$RUN_UID" \
     --disabled-password "$RUN_USER"
 
 # Fix permissions
-RUN chown -R $RUN_USER:$RUN_USER $ANDROID_HOME $ANDROID_SDK_HOME $ANDROID_NDK_HOME
-RUN chmod -R a+rx $ANDROID_HOME $ANDROID_SDK_HOME $ANDROID_NDK_HOME
+RUN chown -R $RUN_USER:$RUN_USER $ANDROID_HOME $ANDROID_SDK_HOME
+RUN chmod -R a+rx $ANDROID_HOME $ANDROID_SDK_HOME
 
 # Creating project directories prepared for build when running
 # `docker run`
