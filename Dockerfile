@@ -158,3 +158,10 @@ WORKDIR $PROJECT
 
 USER $RUN_USER
 RUN echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+# Add Keystore properties in the environment
+ENV KEYSTORE_FILE technistock-key.jks
+ENV KEYSTORE_PASSWORD T3chnist0ck
+ENV KEYSTORE_ALIAS streamingmobilekey
+ENV KEYSTORE_KEY_PASSWORD T3chnist0ck
+
