@@ -127,28 +127,9 @@ RUN wget --quiet -O sdk.install.sh "https://get.sdkman.io" && \
 # Cleaning
 RUN apt-get clean
 
-# Add build user account, values are set to default below
-ENV RUN_USER mobileci
-ENV RUN_UID 5089
-
-RUN id $RUN_USER || adduser --uid "$RUN_UID" \
-    --gecos 'Build User' \
-    --shell '/bin/sh' \
-    --disabled-login \
-    --disabled-password "$RUN_USER"
-
 # Fix permissions
 RUN chown -R $RUN_USER:$RUN_USER $ANDROID_HOME $ANDROID_SDK_HOME
 RUN chmod -R a+rx $ANDROID_HOME $ANDROID_SDK_HOME
-
-# Creating project directories prepared for build when running
-# `docker run`
-ENV PROJECT /project
-RUN mkdir $PROJECT
-RUN chown -R $RUN_USER:$RUN_USER $PROJECT
-WORKDIR $PROJECT
-
-USER $RUN_USER
 RUN echo "sdk.dir=$ANDROID_HOME" > local.properties
 
 # Add Keystore properties in the environment
